@@ -22,6 +22,10 @@ python manage.py migrate
 python manage.py runserver
 ```
 
+Demo
+=====
+[Demo App](https://django-pwa-starter-kit.vercel.app/)
+
 Feedback
 =====
 I welcome your feedback and pull requests.  Enjoy!
