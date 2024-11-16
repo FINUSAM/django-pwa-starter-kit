@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+{% load pwa %}
+{% load static %}
+<head>
+    {% progressive_web_app_meta %}
+    <title>{% block title %} {% endblock %} &#183; Slotte</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
+    {% block style %} {% endblock %}
+</head>
+
+<body>
+
+    {% block content %} {% endblock %}
+
+</body>
+
+</html>
