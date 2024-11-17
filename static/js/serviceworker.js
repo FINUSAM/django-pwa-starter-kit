@@ -3,52 +3,57 @@
 
 var staticCacheName = "django-pwa-v" + new Date().getTime();
 var filesToCache = [
-    '/',
-    '/static/css/home.css',
+  '/',
+  '/static/css/home.css',
+  'https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css'
 ];
 
 // Cache on install
 self.addEventListener("install", event => {
-    this.skipWaiting();
-    event.waitUntil(
-        caches.open(staticCacheName)
-            .then(cache => {
-                return cache.addAll(filesToCache);
-            })
-    )
+  this.skipWaiting();
+  event.waitUntil(
+    caches.open(staticCacheName)
+      .then(cache => {
+        return cache.addAll(filesToCache);
+      })
+  )
 });
 
 // Clear cache on activate
 self.addEventListener('activate', event => {
-    event.waitUntil(
-        caches.keys().then(cacheNames => {
-            return Promise.all(
-                cacheNames
-                    .filter(cacheName => (cacheName.startsWith("django-pwa-")))
-                    .filter(cacheName => (cacheName !== staticCacheName))
-                    .map(cacheName => caches.delete(cacheName))
-            );
-        })
-    );
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames
+          .filter(cacheName => (cacheName.startsWith("django-pwa-")))
+          .filter(cacheName => (cacheName !== staticCacheName))
+          .map(cacheName => caches.delete(cacheName))
+      );
+    })
+  );
 });
 
 // If any fetch fails, it will look for the request in the cache and serve it from there first
-self.addEventListener("fetch", function (event) { 
+self.addEventListener("fetch", function (event) {
   if (event.request.method !== "GET") return;
 
   event.respondWith(
     fromCache(event.request).then(
       function (response) {
-        // The response was found in the cache so we responde with it and update the entry
-
-        // This is where we call the server to get the newest version of the
-        // file to use the next time we show view
+        // The response was found in the cache
         event.waitUntil(
-          fetch(event.request).then(function (response) {
-            return updateCache(event.request, response);
-          })
+          fetch(event.request).then(
+            function (response) {
+              console.log('previous cache files updated to latest');
+              return updateCache(event.request, response);
+            },
+            function () {
+              console.log('previous cache files could not be updated');
+              return;
+            }
+          )
         );
-
+        console.log('collected from previous cache files');
         return response;
       },
       function () {
@@ -56,8 +61,12 @@ self.addEventListener("fetch", function (event) {
         return fetch(event.request)
           .then(function (response) {
             // If request was success, add or update it in the cache
-            event.waitUntil(updateCache(event.request, response.clone()));
-
+            console.log('got new data unavailable in cache');
+            event.waitUntil(
+              updateCache(event.request, response.clone()).then(function () {
+                console.log("added new data to cache: ", response);
+              })
+            );
             return response;
           })
           .catch(function (error) {
